@@ -49,8 +49,9 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
         chromedp.Flag("disable-gpu", true),
         chromedp.Flag("no-sandbox", true),
         chromedp.Flag("disable-dev-shm-usage", true),
-        chromedp.WindowSize(1920, 1080),
-        chromedp.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"),
+        chromedp.Flag("disable-software-rasterizer", true),
+        chromedp.Flag("in-process-gpu", true),
+        chromedp.Flag("disable-setuid-sandbox", true),
     )
 
     allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
