@@ -20,23 +20,19 @@ type Scraper struct {
 func NewScraper() *Scraper {
     return &Scraper{
         baseURL: "https://www.pnp.co.za",
-        timeout: 60 * time.Second,
+        timeout: 25 * time.Second,
         retries: 3,
     }
 }
 
 func (s *Scraper) waitForProducts() chromedp.Action {
     return chromedp.ActionFunc(func(ctx context.Context) error {
-        if err := chromedp.WaitReady("body", chromedp.ByQuery).Do(ctx); err != nil {
+        time.Sleep(2 * time.Second)
+
+        if err := chromedp.WaitVisible(".product-grid-item", chromedp.ByQuery).Do(ctx); err != nil {
             return err
         }
 
-        var pageSource string
-        if err := chromedp.OuterHTML("html", &pageSource).Do(ctx); err != nil {
-            return err
-        }
-
-        time.Sleep(5 * time.Second)
         return nil
     })
 }
@@ -52,6 +48,20 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
         chromedp.Flag("disable-software-rasterizer", true),
         chromedp.Flag("in-process-gpu", true),
         chromedp.Flag("disable-setuid-sandbox", true),
+        // Additional memory-saving flags
+        chromedp.Flag("disable-extensions", true),
+        chromedp.Flag("disable-background-networking", true),
+        chromedp.Flag("disable-background-timer-throttling", true),
+        chromedp.Flag("disable-backgrounding-occluded-windows", true),
+        chromedp.Flag("disable-breakpad", true),
+        chromedp.Flag("disable-client-side-phishing-detection", true),
+        chromedp.Flag("disable-default-apps", true),
+        chromedp.Flag("disable-sync", true),
+        chromedp.Flag("disable-translate", true),
+        chromedp.Flag("disable-features", "site-per-process,TranslateUI"),
+        chromedp.Flag("hide-scrollbars", true),
+        chromedp.Flag("mute-audio", true),
+        chromedp.WindowSize(1280, 720),
     )
 
     allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
@@ -60,13 +70,12 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
     for attempt := 0; attempt < s.retries; attempt++ {
         if attempt > 0 {
             log.Printf("Retry attempt %d/%d", attempt+1, s.retries)
-            time.Sleep(time.Duration(attempt) * 2 * time.Second)
+            time.Sleep(time.Duration(attempt) * time.Second)
         }
 
         ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
         ctx, cancel = context.WithTimeout(ctx, s.timeout)
-        defer cancel()
-
+        
         var products []models.Product
         searchURL := fmt.Sprintf("%s/search/%s", s.baseURL, searchTerm)
 
@@ -76,7 +85,7 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
                 log.Println("Page navigation complete, waiting for content...")
                 return nil
             }),
-            chromedp.Sleep(5*time.Second),
+            chromedp.Sleep(2*time.Second),
             s.waitForProducts(),
             chromedp.ActionFunc(func(ctx context.Context) error {
                 log.Println("Attempting to extract products...")
@@ -85,8 +94,7 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
             chromedp.Evaluate(`
                 (() => {
                     const products = document.getElementsByClassName('product-grid-item');
-                    console.log('Found products:', products.length);
-                    return Array.from(products).map(item => {
+                    return Array.from(products).slice(0, 20).map(item => {  // Limit to first 20 products
                         const img = item.querySelector('.product-grid-item__image-container.product-action');
                         const promo = item.querySelector('.product-grid-item__promotion-container a');
                         const price = item.querySelector('.price');
@@ -102,6 +110,8 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
                 })()
             `, &products),
         )
+
+        cancel()
 
         if err != nil {
             lastErr = fmt.Errorf("attempt %d failed: %v", attempt+1, err)
