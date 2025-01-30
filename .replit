@@ -1,0 +1,13 @@
+run = "go run main.go"
+hidden = [".git", ".gitignore"]
+
+[nix]
+channel = "stable-22_11"
+
+[env]
+PORT = "8080"
+CHROME_PATH = "/usr/bin/chromium"
+
+[languages]
+[languages.go]
+pattern = "**/*.go"

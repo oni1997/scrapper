@@ -1,27 +1,36 @@
 package scraper
 
 import (
-    "context"
-    "fmt"
-    "log"
-    "strings"
-    "time"
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
 
-    "github.com/chromedp/chromedp"
-    "scrapper/models"
+	"scrapper/models"
+
+	"github.com/chromedp/chromedp"
 )
 
 type Scraper struct {
     baseURL string
     timeout time.Duration
     retries int
+    chromePath string
 }
 
 func NewScraper() *Scraper {
+    chromePath := os.Getenv("CHROME_PATH")
+    if chromePath == "" {
+        chromePath = "/nix/store/chrome-linux/chrome"
+    }
+
     return &Scraper{
         baseURL: "https://www.pnp.co.za",
         timeout: 25 * time.Second,
         retries: 3,
+        chromePath: chromePath,
     }
 }
 
@@ -45,10 +54,7 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
         chromedp.Flag("disable-gpu", true),
         chromedp.Flag("no-sandbox", true),
         chromedp.Flag("disable-dev-shm-usage", true),
-        chromedp.Flag("disable-software-rasterizer", true),
-        chromedp.Flag("in-process-gpu", true),
-        chromedp.Flag("disable-setuid-sandbox", true),
-        // Additional memory-saving flags
+        chromedp.ExecPath(s.chromePath),
         chromedp.Flag("disable-extensions", true),
         chromedp.Flag("disable-background-networking", true),
         chromedp.Flag("disable-background-timer-throttling", true),
@@ -61,6 +67,8 @@ func (s *Scraper) ScrapeProducts(searchTerm string) (*models.ProductResponse, er
         chromedp.Flag("disable-features", "site-per-process,TranslateUI"),
         chromedp.Flag("hide-scrollbars", true),
         chromedp.Flag("mute-audio", true),
+        chromedp.Flag("single-process", true),
+        chromedp.Flag("max-old-space-size", "512"),
         chromedp.WindowSize(1280, 720),
     )
 
