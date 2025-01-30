@@ -14,10 +14,18 @@ COPY . .
 
 RUN apt-get update && apt-get install -y \
     chromium \
+    chromium-driver \
+    ca-certificates \
+    fonts-liberation \
+    libnss3 \
+    xdg-utils \
     --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
 RUN go build -o main .
+
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROME_PATH=/usr/lib/chromium/
 
 EXPOSE 8080
 
