@@ -1,0 +1,149 @@
+# PnP Product Scraper API
+
+A Go-based web scraping API that fetches product information from PnP (Pick n Pay) website. This API provides a simple endpoint to search for products and retrieve their details including prices, promotions, and images.
+
+## Features
+
+- Web scraping using ChromeDP for JavaScript-rendered content
+- Configurable retry mechanism for reliable scraping
+- RESTful API endpoint for product searches
+- Headless browser automation
+- Automatic price formatting
+- Detailed error reporting
+
+## Prerequisites
+
+- Go 1.16 or higher
+- Chrome/Chromium browser
+- Git
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone git@github.com:oni1997/scrapper.git
+cd scrapper
+```
+
+2. Install dependencies:
+```bash
+go mod download
+```
+
+## Configuration
+
+The scraper comes with default configurations:
+- Base URL: `https://www.pnp.co.za`
+- Timeout: 60 seconds
+- Maximum retries: 3
+- Server port: 8080
+
+## API Endpoints
+
+### Search Products
+
+**Endpoint:** `POST /api/search`
+
+**Request Body:**
+```json
+{
+    "searchTerm": "string"
+}
+```
+
+**Response:**
+```json
+{
+    "success": boolean,
+    "message": "string",
+    "products": [
+        {
+            "id": "string",
+            "name": "string",
+            "price": "string",
+            "image_url": "string",
+            "promotion": "string"
+        }
+    ],
+    "total": integer,
+    "search_term": "string"
+}
+```
+
+**Status Codes:**
+- 200: Successful operation
+- 400: Invalid request
+- 405: Method not allowed
+- 500: Internal server error
+
+## Usage Example
+
+```bash
+curl -X POST http://localhost:8080/api/search \
+-H "Content-Type: application/json" \
+-d '{"searchTerm": "milk"}'
+```
+
+## Error Handling
+
+The API implements comprehensive error handling:
+- Invalid requests return appropriate HTTP status codes and error messages
+- Scraping failures trigger automatic retries
+- All errors are logged for debugging purposes
+
+## Technical Details
+
+### Components
+
+1. **Scraper:**
+   - Manages web scraping operations using ChromeDP
+   - Implements retry mechanism
+   - Handles page navigation and content extraction
+
+2. **Models:**
+   - `Product`: Represents individual product data
+   - `ProductResponse`: Wraps the API response
+   - `SearchRequest`: Defines the search request structure
+
+3. **Main Server:**
+   - Handles HTTP requests
+   - Manages API routing
+   - Provides error handling and response formatting
+
+### Browser Automation
+
+The scraper uses ChromeDP with the following configurations:
+- Headless mode enabled
+- GPU disabled
+- Sandbox disabled
+- Custom user agent
+- 1920x1080 window size
+
+## Development
+
+To run the server in development mode:
+
+```bash
+go run main.go
+```
+
+The server will start on port 8080 by default.
+
+## Production Considerations
+
+When deploying to production, consider:
+- Setting appropriate timeout values
+- Configuring retry mechanisms based on server capacity
+- Implementing rate limiting
+- Adding authentication
+- Using HTTPS
+- Setting up monitoring and logging
+- Implementing caching mechanisms
+
+## License
+
+MIT License
+
+## Contributing
+
+Onesmus
