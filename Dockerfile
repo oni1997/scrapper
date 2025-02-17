@@ -4,7 +4,9 @@ ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=amd64
-
+ENV CHROME_BIN=/usr/lib/chromium/chromium
+ENV CHROME_PATH=/usr/lib/chromium/
+    
 WORKDIR /app
 
 COPY go.mod go.sum ./

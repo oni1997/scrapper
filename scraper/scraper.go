@@ -23,7 +23,7 @@ type Scraper struct {
 func NewScraper() *Scraper {
     chromePath := os.Getenv("CHROME_PATH")
     if chromePath == "" {
-        chromePath = "/nix/store/chrome-linux/chrome"
+        chromePath = ""
     }
 
     return &Scraper{
