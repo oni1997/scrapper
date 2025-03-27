@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Scraper</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input { padding: 8px; font-size: 14px; }
+        button { padding: 10px 20px; font-size: 14px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .product { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .product img { max-width: 100px; }
+        .product-details { display: inline-block; margin-left: 10px; vertical-align: top; }
+    </style>
+</head>
+<body>
+    <h1>Product Scraper</h1>
+    <label for="searchTerm">Search Term: </label>
+    <input type="text" id="searchTerm" placeholder="Enter search term">
+    <button onclick="searchProducts()">Search</button>
+    <div id="products"></div>
+
+    <script>
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchTerm').value;
+            if (!searchTerm) {
+                alert('Please enter a search term');
+                return;
+            }
+
+            fetch('/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ searchTerm: searchTerm })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const productsDiv = document.getElementById('products');
+                productsDiv.innerHTML = '';
+
+                if (data.success) {
+                    data.products.forEach(product => {
+                        const productDiv = document.createElement('div');
+                        productDiv.className = 'product';
+                        productDiv.innerHTML = `
+                            <img src="${product.image_url}" alt="${product.name}">
+                            <div class="product-details">
+                                <h3>${product.name}</h3>
+                                <p>Price: ${product.price}</p>
+                                <p>Promotion: ${product.promotion || 'N/A'}</p>
+                            </div>
+                        `;
+                        productsDiv.appendChild(productDiv);
+                    });
+                } else {
+                    productsDiv.innerHTML = `<p>${data.message}</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error fetching products');
+            });
+        }
+    </script>
+</body>
+</html>
